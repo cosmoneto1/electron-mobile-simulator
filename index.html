@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0" /> -->
+    <title>Mobile simulator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
+    <link rel="stylesheet" href="assets/devices.min.css" />
+    <link rel="stylesheet" href="assets/style.css" />
+  <body>
+    <!-- <div class="heard">
+      <button>
+        <i class="fas fa-window-minimize"></i>
+      </button>
+      <button>
+        <i class="fas fa-plus"></i>
+      </button>
+      <button>
+        <i class="fas fa-times"></i>
+      </button>
+    </div> -->
+    <div class="flex">
+      <div class="flex-1 m-10">
+        <input type="url" class="input" name="site" id="site" placeholder="https://exemplo.com" />
+      </div>
+      <div class="mw-70 m-10">
+        <button id="btncreate"> Create </button>
+      </div>
+      <div  class="m-10">
+        <select class="select-css" id="plataform">
+          <option value="Android" selected>Android</option>
+          <option value="Ios">Ios</option>
+        </select>
+      </div>
+    </div>
+    <div class="flex">
+      <div class="flex-1 m-10">
+        <input type="text" readonly class="input" name="file" id="file" placeholder="Ex:/folder/preload.js" />
+      </div>
+      <div class="mw-70 m-10">
+        <button id="btnfile"> File js preload </button>
+      </div>
+    </div>
+
+    <div class="m-30">
+      <!-- mobile -->
+      <div class="marvel-device s5 white">
+        <div class="top-bar"></div>
+        <div class="sleep"></div>
+        <div class="camera"></div>
+        <div class="sensor"></div>
+        <div class="speaker"></div>
+        <div class="screen" id="mobile">
+          <!-- Content goes here -->
+        </div>
+        <div class="home"></div>
+      </div>
+      <!-- mobile -->
+    </div>
+
+
+    <script>
+      const { dialog } = require('electron').remote;
+      var androidWebkit = 'Mozilla/5.0 (Linux; Android 8.0.0; SM-G960F Build/R16NW) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.84 Mobile Safari/537.36';
+      var iosWebkit = 'Mozilla/5.0 (iPhone; CPU iPhone OS 12_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0 Mobile/15E148 Safari/604.1';
+      var inputSite = document.getElementById("site");
+      var inputFile = document.getElementById("file");
+      var btnCreate = document.getElementById("btncreate");
+      var btnfile = document.getElementById("btnfile");
+      var selectPlataform = document.getElementById('plataform');
+      var mobile = document.getElementById("mobile");
+      var preloadFile = undefined;
+      var device = androidWebkit;
+      var urlAtual;
+
+        async function openFileJs(){
+          const { filePaths } = await dialog.showOpenDialog({
+            properties: ['openFile'],
+            filters: [
+              { name: 'File js', extensions: ['js'] }
+            ]
+          });
+
+          if (filePaths.length > 0) {
+            inputFile.value = filePaths[0];
+            preloadFile = filePaths[0];
+          } else {
+            inputFile.value = '';
+            preloadFile = undefined;
+          }
+        }
+
+        function renderWebView(url){
+          urlAtual = url;
+          const webview = document.createElement('webview');
+          webview.id = "myWebview";
+          webview.src = url || "";
+          webview.style = "width: 320px; min-height: 580px;"
+          webview.useragent = device;
+
+          if (preloadFile) {
+              webview.preload = preloadFile || "";
+          }
+
+
+          webview.addEventListener("did-start-loading", function (e) {
+            webview.openDevTools();
+          });
+
+          mobile.innerHTML = '';
+          mobile.appendChild(webview);
+        }
+
+        selectPlataform.addEventListener("change", function(e){
+          e.preventDefault();
+          device = (this.value == 'Ios')?  iosWebkit : androidWebkit;
+          console.log('device ', device);
+          if (urlAtual) {
+            renderWebView(urlAtual);
+          }
+
+        });
+
+        btnCreate.addEventListener("click", function(e){
+          e.preventDefault();
+          const url = inputSite.value;
+          renderWebView(url);
+        });
+
+
+      inputSite.addEventListener('keyup', function(e){
+        var key = e.which || e.keyCode;
+        if (key == 13) { // codigo da tecla enter
+            renderWebView(this.value);
+        }
+      });
+
+      btnfile.addEventListener("click", function(e){
+        e.preventDefault();
+        openFileJs();
+      });
+
+    </script>
+  </body>
+</html>
